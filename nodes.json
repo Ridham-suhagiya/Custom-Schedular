@@ -1,0 +1,135 @@
+[
+  {
+    "nodeId": "node-1",
+    "cloudProvider": "AWS",
+    "instanceType": "c5.large",
+    "totalCapacity": {
+      "cpu": 8,
+      "memory_gb": 32,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "allocatable": {
+      "cpu": 1,
+      "memory_gb": 20,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "nodeType": "ON_DEMAND",
+    "realTimeCostPerMinute": 0.4
+  },
+  {
+    "nodeId": "node-2",
+    "cloudProvider": "AWS",
+    "instanceType": "m5.xlarge",
+    "totalCapacity": {
+      "cpu": 16,
+      "memory_gb": 64,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "allocatable": {
+      "cpu": 4,
+      "memory_gb": 0,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "nodeType": "SPOT",
+    "realTimeCostPerMinute": 1.46
+  },
+  {
+    "nodeId": "node-3",
+    "cloudProvider": "AWS",
+    "instanceType": "p3.2xlarge",
+    "totalCapacity": {
+      "cpu": 32,
+      "memory_gb": 128,
+      "gpuType": "V100",
+      "gpuCount": 1
+    },
+    "allocatable": {
+      "cpu": 4,
+      "memory_gb": 40,
+      "gpuType": "V100",
+      "gpuCount": 0
+    },
+    "nodeType": "ON_DEMAND",
+    "realTimeCostPerMinute": 2.5
+  },
+  {
+    "nodeId": "node-4",
+    "cloudProvider": "AWS",
+    "instanceType": "m5.large",
+    "totalCapacity": {
+      "cpu": 4,
+      "memory_gb": 16,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "allocatable": {
+      "cpu": 0,
+      "memory_gb": 8,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "nodeType": "SPOT",
+    "realTimeCostPerMinute": 1.12
+  },
+  {
+    "nodeId": "node-5",
+    "cloudProvider": "AWS",
+    "instanceType": "c5.xlarge",
+    "totalCapacity": {
+      "cpu": 16,
+      "memory_gb": 64,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "allocatable": {
+      "cpu": 4,
+      "memory_gb": 7,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "nodeType": "ON_DEMAND",
+    "realTimeCostPerMinute": 0.9
+  },
+  {
+    "nodeId": "node-6",
+    "cloudProvider": "GCP",
+    "instanceType": "e2-standard-4",
+    "totalCapacity": {
+      "cpu": 4,
+      "memory_gb": 16,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "allocatable": {
+      "cpu": 0,
+      "memory_gb": 0,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "nodeType": "ON_DEMAND",
+    "realTimeCostPerMinute": 0.2
+  },
+  {
+    "nodeId": "node-7",
+    "cloudProvider": "AZURE",
+    "instanceType": "NC6s_v3",
+    "totalCapacity": {
+      "cpu": 12,
+      "memory_gb": 112,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "allocatable": {
+      "cpu": 4,
+      "memory_gb": 96,
+      "gpuType": null,
+      "gpuCount": 0
+    },
+    "nodeType": "SPOT",
+    "realTimeCostPerMinute": 1.2
+  }
+]
