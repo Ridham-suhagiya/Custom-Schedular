@@ -44,10 +44,6 @@ def calculate_score(job, node):
     Calculates the weighted fitness score for a given job and node.
     This function mirrors the logic from the React PoC.
     """
-    # Hard constraint: If cost exceeds max tolerable cost, score is 0.
-    if node['realTimeCostPerMinute'] > job['maxTolerableCost']:
-        return 0
-
     # CostScore: Inversely proportional to cost (normalized against max cost)
     cost_score = 1 - (node['realTimeCostPerMinute'] / MAX_COST)
 
@@ -81,6 +77,42 @@ def calculate_score(job, node):
     # Ensure score is not negative
     return max(0, final_score)
 
+def select_best_node(job, nodes):
+    """
+    Finds the best-fit node for a given job based on the scoring function.
+    Returns the best node and its score, or None if no suitable node is found.
+    """
+    best_node = None
+    highest_score = -1
+
+    for node in nodes:
+        # Hard filter 1: Check if the node's cost is acceptable for the job.
+        if node['realTimeCostPerMinute'] > job['maxTolerableCost']:
+            continue # Skip this node if it's too expensive.
+
+        # Hard filter 2: Check if node can satisfy the job's resource requirements
+        can_fit = (
+            node['allocatable']['cpu'] >= job['resourceRequest']['cpu'] and
+            node['allocatable']['memory_gb'] >= job['resourceRequest']['memory_gb'] and
+            (job['resourceRequest']['gpuType'] is None or (node['totalCapacity']['gpuType'] == job['resourceRequest']['gpuType'] and node['allocatable']['gpuCount'] >= job['resourceRequest']['gpuCount']))
+        )
+
+        if can_fit:
+            score = calculate_score(job, node)
+            if score > highest_score:
+                highest_score = score
+                best_node = node
+    
+    return best_node
+
+def reset_jobs(jobs):
+    """Resets the 'isScheduled' flag for all jobs."""
+    print("Resetting all jobs for a new scheduling cycle...")
+    for job in jobs:
+        if 'isScheduled' in job:
+            job['isScheduled'] = False
+    return jobs
+
 def run_scheduling_cycle(jobs, nodes):
     """
     Runs one cycle of the scheduling algorithm.
@@ -92,44 +124,25 @@ def run_scheduling_cycle(jobs, nodes):
     
     # Keep track of updated nodes for writing back to file
     updated_nodes = {node['nodeId']: node.copy() for node in nodes}
-    scheduled_job_ids = []
-
+    
     for job in sorted_jobs:
         # Check if the job has already been scheduled in this or a previous cycle
         if 'isScheduled' in job and job['isScheduled']:
             continue
 
-        best_node = None
-        highest_score = -1
-        # Filter and score nodes
-        for node in updated_nodes.values():
-
-            # Hard filter: Check if node can satisfy the job's resource requirements
-            can_fit = (
-                node['allocatable']['cpu'] >= job['resourceRequest']['cpu'] and
-                node['allocatable']['memory_gb'] >= job['resourceRequest']['memory_gb'] and
-                (job['resourceRequest']['gpuType'] is None or (node['totalCapacity']['gpuType'] == job['resourceRequest']['gpuType'] and node['allocatable']['gpuCount'] >= job['resourceRequest']['gpuCount']))
-            )
-            print(can_fit, "thisdoivnsdon")
-            if can_fit:
-                score = calculate_score(job, node)
-                if score > highest_score:
-                    highest_score = score
-                    best_node = node
+        best_node = select_best_node(job, list(updated_nodes.values()))
         
         if best_node:
-            # Place job on the best node and update allocatable resources
-            print(f"  -> Job '{job['jobId']}' scheduled on node '{best_node['nodeId']}' with score: {highest_score:.2f}")
+            print(f"  -> Job '{job['jobId']}' scheduled on node '{best_node['nodeId']}'")
             
             # Update allocatable resources in our temporary dictionary
-            best_node['allocatable']['cpu'] -= job['resourceRequest']['cpu']
-            best_node['allocatable']['memory_gb'] -= job['resourceRequest']['memory_gb']
+            updated_nodes[best_node['nodeId']]['allocatable']['cpu'] -= job['resourceRequest']['cpu']
+            updated_nodes[best_node['nodeId']]['allocatable']['memory_gb'] -= job['resourceRequest']['memory_gb']
             if job['resourceRequest']['gpuCount'] > 0:
-                best_node['allocatable']['gpuCount'] -= job['resourceRequest']['gpuCount']
+                updated_nodes[best_node['nodeId']]['allocatable']['gpuCount'] -= job['resourceRequest']['gpuCount']
             
             # Mark the job as scheduled to prevent it from being scheduled again
             job['isScheduled'] = True
-            scheduled_job_ids.append(job['jobId'])
         else:
             print(f"  -> Job '{job['jobId']}' could not be scheduled.")
 
@@ -150,7 +163,7 @@ def reset_node_resources(nodes):
         node for node in nodes
         if node['allocatable']['cpu'] < node['totalCapacity']['cpu'] or
            node['allocatable']['memory_gb'] < node['totalCapacity']['memory_gb'] or
-           node['allocatable']['gpuCount'] < node['totalCapacity']['gpuCount']
+           (node['totalCapacity']['gpuCount'] is not None and node['allocatable']['gpuCount'] < node['totalCapacity']['gpuCount'])
     ]
 
     if nodes_with_jobs:
@@ -173,29 +186,15 @@ def main():
     """
     print("Starting the Cost-Aware Distributed Job Scheduler PoC...")
     
-    # Check if data files exist. If not, create them.
-    if not os.path.exists(JOBS_FILE):
-        print(f"'{JOBS_FILE}' not found. Creating a default file.")
-        jobs_data = [
-            {"jobId": f"job-{i}", "priority": random.randint(1, 10), "resourceRequest": {"cpu": random.randint(1, 16), "memory_gb": random.randint(4, 64), "gpuType": None, "gpuCount": 0}, "slaType": "BATCH", "maxTolerableCost": round(random.uniform(0.5, 2.0), 2), "isRescheduled": False}
-            for i in range(1, 11)
-        ]
-        write_data(JOBS_FILE, jobs_data)
-
-    if not os.path.exists(NODES_FILE):
-        print(f"'{NODES_FILE}' not found. Creating a default file.")
-        nodes_data = [
-            {"nodeId": f"node-{i}", "cloudProvider": "AWS", "instanceType": "c5.large", "totalCapacity": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "allocatable": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "nodeType": "SPOT" if i % 2 == 0 else "ON_DEMAND", "realTimeCostPerMinute": round(random.uniform(0.2, 1.5), 2)}
-            for i in range(1, 6)
-        ]
-        write_data(NODES_FILE, nodes_data)
-
     last_reset_time = time.time()
     
     while True:
         # Read the current state of jobs and nodes
         jobs = read_data(JOBS_FILE)
         nodes = read_data(NODES_FILE)
+
+        # Reset jobs before each cycle
+        jobs = reset_jobs(jobs)
 
         # Run one scheduling cycle
         run_scheduling_cycle(jobs, nodes)

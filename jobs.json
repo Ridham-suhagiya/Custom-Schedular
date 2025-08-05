@@ -1,7 +1,7 @@
 [
   {
     "jobId": "job-1",
-    "priority": 8,
+    "priority": 10,
     "resourceRequest": {
       "cpu": 8,
       "memory_gb": 16,
@@ -9,132 +9,21 @@
       "gpuCount": 0
     },
     "slaType": "BATCH",
-    "maxTolerableCost": 1.58,
+    "maxTolerableCost": 1.0,
     "isRescheduled": false,
     "isScheduled": true
   },
   {
     "jobId": "job-2",
-    "priority": 10,
+    "priority": 5,
     "resourceRequest": {
-      "cpu": 16,
-      "memory_gb": 48,
-      "gpuType": "V100",
-      "gpuCount": 1
-    },
-    "slaType": "BATCH",
-    "maxTolerableCost": 2.5,
-    "isRescheduled": false,
-    "isScheduled": true
-  },
-  {
-    "jobId": "job-3",
-    "priority": 6,
-    "resourceRequest": {
-      "cpu": 12,
-      "memory_gb": 64,
-      "gpuType": null,
-      "gpuCount": 0
-    },
-    "slaType": "BATCH",
-    "maxTolerableCost": 1.6,
-    "isRescheduled": false,
-    "isScheduled": true
-  },
-  {
-    "jobId": "job-4",
-    "priority": 3,
-    "resourceRequest": {
-      "cpu": 4,
-      "memory_gb": 8,
-      "gpuType": null,
-      "gpuCount": 0
-    },
-    "slaType": "BATCH",
-    "maxTolerableCost": 1.17,
-    "isRescheduled": false,
-    "isScheduled": true
-  },
-  {
-    "jobId": "job-5",
-    "priority": 10,
-    "resourceRequest": {
-      "cpu": 24,
-      "memory_gb": 96,
-      "gpuType": null,
-      "gpuCount": 0
-    },
-    "slaType": "LATENCY_SENSITIVE",
-    "maxTolerableCost": 3.0,
-    "isRescheduled": false
-  },
-  {
-    "jobId": "job-6",
-    "priority": 1,
-    "resourceRequest": {
-      "cpu": 4,
+      "cpu": 8,
       "memory_gb": 16,
       "gpuType": null,
       "gpuCount": 0
     },
     "slaType": "BATCH",
-    "maxTolerableCost": 0.8,
-    "isRescheduled": false,
-    "isScheduled": true
-  },
-  {
-    "jobId": "job-7",
-    "priority": 7,
-    "resourceRequest": {
-      "cpu": 7,
-      "memory_gb": 12,
-      "gpuType": null,
-      "gpuCount": 0
-    },
-    "slaType": "BATCH",
-    "maxTolerableCost": 1.3,
-    "isRescheduled": false,
-    "isScheduled": true
-  },
-  {
-    "jobId": "job-8",
-    "priority": 4,
-    "resourceRequest": {
-      "cpu": 8,
-      "memory_gb": 8,
-      "gpuType": null,
-      "gpuCount": 0
-    },
-    "slaType": "BATCH",
-    "maxTolerableCost": 1.47,
-    "isRescheduled": false,
-    "isScheduled": true
-  },
-  {
-    "jobId": "job-9",
-    "priority": 2,
-    "resourceRequest": {
-      "cpu": 12,
-      "memory_gb": 57,
-      "gpuType": null,
-      "gpuCount": 0
-    },
-    "slaType": "BATCH",
-    "maxTolerableCost": 0.73,
-    "isRescheduled": false,
-    "isScheduled": true
-  },
-  {
-    "jobId": "job-10",
-    "priority": 3,
-    "resourceRequest": {
-      "cpu": 12,
-      "memory_gb": 40,
-      "gpuType": null,
-      "gpuCount": 0
-    },
-    "slaType": "BATCH",
-    "maxTolerableCost": 1.14,
+    "maxTolerableCost": 1.0,
     "isRescheduled": false,
     "isScheduled": true
   }
