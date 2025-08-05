@@ -96,36 +96,59 @@ class TestNodeSelection(unittest.TestCase):
     def test_run_scheduling_cycle_integration(self):
         """
         Test that run_scheduling_cycle correctly processes multiple jobs
-        and updates node and job states.
+        and updates node and job states, demonstrating resource contention.
         """
         jobs_to_schedule = [
             {"jobId": "job-1", "priority": 10, "resourceRequest": {"cpu": 8, "memory_gb": 16, "gpuType": None, "gpuCount": 0}, "slaType": "BATCH", "maxTolerableCost": 1.0, "isRescheduled": False},
             {"jobId": "job-2", "priority": 5, "resourceRequest": {"cpu": 8, "memory_gb": 16, "gpuType": None, "gpuCount": 0}, "slaType": "BATCH", "maxTolerableCost": 1.0, "isRescheduled": False}
         ]
         nodes_for_scheduling = [
-            {"nodeId": "node-1", "totalCapacity": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "allocatable": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "nodeType": "ON_DEMAND", "realTimeCostPerMinute": 0.8},
-            {"nodeId": "node-2", "totalCapacity": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "allocatable": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "nodeType": "ON_DEMAND", "realTimeCostPerMinute": 0.6}
+            # node-A is too small for either job (needs 8 CPU, has 4 CPU)
+            {"nodeId": "node-A", "totalCapacity": {"cpu": 4, "memory_gb": 16, "gpuType": None, "gpuCount": 0}, "allocatable": {"cpu": 4, "memory_gb": 16, "gpuType": None, "gpuCount": 0}, "nodeType": "ON_DEMAND", "realTimeCostPerMinute": 0.8},
+            # node-B is large enough for one job
+            {"nodeId": "node-B", "totalCapacity": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "allocatable": {"cpu": 8, "memory_gb": 32, "gpuType": None, "gpuCount": 0}, "nodeType": "ON_DEMAND", "realTimeCostPerMinute": 0.6}
         ]
         
+        # Write initial data to files
         with open(JOBS_FILE, 'w') as f:
             json.dump(jobs_to_schedule, f, indent=2)
         with open(NODES_FILE, 'w') as f:
             json.dump(nodes_for_scheduling, f, indent=2)
             
-        run_scheduling_cycle(jobs_to_schedule, nodes_for_scheduling)
+        # Run the scheduling cycle
+        # Note: run_scheduling_cycle modifies the lists in place and writes to files
+        run_scheduling_cycle(jobs_to_schedule, nodes_for_scheduling) 
         
+        # Reload data from files to get the true, updated state after the function call
         updated_jobs = json.load(open(JOBS_FILE, 'r'))
         updated_nodes = json.load(open(NODES_FILE, 'r'))
 
-        # Job 1 is high priority and should be scheduled first
-        self.assertTrue(updated_jobs[0].get('isScheduled'))
-        self.assertFalse(updated_jobs[1].get('isScheduled'))
+        # Verify job scheduling status
+        job1_in_updated = next((j for j in updated_jobs if j['jobId'] == 'job-1'), None)
+        job2_in_updated = next((j for j in updated_jobs if j['jobId'] == 'job-2'), None)
 
-        # Job 1 is scheduled on the cheaper node
-        self.assertEqual(updated_nodes[0]['allocatable']['cpu'], 0)
-        self.assertEqual(updated_nodes[0]['nodeId'], 'node-2')
-        self.assertEqual(updated_nodes[1]['allocatable']['cpu'], 8)
-        self.assertEqual(updated_nodes[1]['nodeId'], 'node-1')
+        self.assertIsNotNone(job1_in_updated, "Job 1 should be present in updated jobs.")
+        self.assertIsNotNone(job2_in_updated, "Job 2 should be present in updated jobs.")
+
+        self.assertTrue(job1_in_updated.get('isScheduled', False), "Job 1 (high priority) should be scheduled.")
+        self.assertFalse(job2_in_updated.get('isScheduled', False), "Job 2 (low priority) should not be scheduled due to resource contention.")
+
+        # Verify node resource allocation
+        node_a_updated = next((n for n in updated_nodes if n['nodeId'] == 'node-A'), None)
+        node_b_updated = next((n for n in updated_nodes if n['nodeId'] == 'node-B'), None)
+
+        self.assertIsNotNone(node_a_updated, "Node A should be present in updated nodes.")
+        self.assertIsNotNone(node_b_updated, "Node B should be present in updated nodes.")
+
+        # Job-1 (priority 10) should be scheduled on node-B (cheaper and fits)
+        # Node-B's resources should be reduced by job-1's request (8 CPU, 16GB Memory)
+        self.assertEqual(node_b_updated['allocatable']['cpu'], 0, "Node B CPU should be 0 after scheduling Job 1.")
+        self.assertEqual(node_b_updated['allocatable']['memory_gb'], 16, "Node B Memory should be 16 after scheduling Job 1.")
+
+        # Node-A's resources should remain unchanged as it's too small for either job
+        self.assertEqual(node_a_updated['allocatable']['cpu'], 4, "Node A CPU should remain 4.")
+        self.assertEqual(node_a_updated['allocatable']['memory_gb'], 16, "Node A Memory should remain 16.")
+
 
 
 if __name__ == '__main__':

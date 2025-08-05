@@ -1,14 +1,14 @@
 [
   {
-    "nodeId": "node-1",
+    "nodeId": "node-A",
     "totalCapacity": {
-      "cpu": 8,
-      "memory_gb": 32,
+      "cpu": 4,
+      "memory_gb": 16,
       "gpuType": null,
       "gpuCount": 0
     },
     "allocatable": {
-      "cpu": 0,
+      "cpu": 4,
       "memory_gb": 16,
       "gpuType": null,
       "gpuCount": 0
@@ -17,7 +17,7 @@
     "realTimeCostPerMinute": 0.8
   },
   {
-    "nodeId": "node-2",
+    "nodeId": "node-B",
     "totalCapacity": {
       "cpu": 8,
       "memory_gb": 32,

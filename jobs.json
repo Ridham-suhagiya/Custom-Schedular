@@ -24,7 +24,6 @@
     },
     "slaType": "BATCH",
     "maxTolerableCost": 1.0,
-    "isRescheduled": false,
-    "isScheduled": true
+    "isRescheduled": false
   }
 ]
